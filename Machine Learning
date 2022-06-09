@@ -1,0 +1,891 @@
+# Product Classification Challenge - Otto group
+
+#The Otto Group is one of the world's biggest e-commerce companies, with branches in more than 20 countries. The group sells millions of products worldwide every day, with several thousand products being added to their product line. Due to its diverse global infrastructure, many identical products get classified differently.*
+
+***We will train a machine learning model from the Otto Group dataset which has 93 features for more than 200,000 products. The objective is to build a predictive model which is able to distinguish between our main product categories.***
+
+Dataset Link: https://www.kaggle.com/c/otto-group-product-classification-challenge
+
+We will train a machine learning model from the Otto Group dataset which has 93 features for more than 200,000 products. The objective is to build a predictive model which is able to distinguish between our main product categories.
+
+Dataset Link: https://www.kaggle.com/c/otto-group-product-classification-challenge
+
+Project Outline:
+Download the dataset.
+Explore and analyze the dataset.
+Prepare the dataset for ML training.
+Train hardcoded and baseline models.
+Feature Engineering.
+Train and Evaluate different models.
+Train Hyperparameters.
+Conclusion and References.
+1. Download the dataset
+Install the required libraries.
+Download data from Kaggle.
+View dataset files.
+Load training set with Pandas.
+Load test set with Pandas.
+Install Required libraries
+!pip install jovian --upgrade --quiet
+!pip install numpy pandas opendatasets scikit-learn xgboost --upgrade --quiet
+     |████████████████████████████████| 173.6 MB 5.2 kB/s 
+Download Data from Kaggle
+import opendatasets as od
+dataset_url = 'https://www.kaggle.com/c/otto-group-product-classification-challenge/overview'
+%%time
+od.download(dataset_url)
+Please provide your Kaggle credentials to download this dataset. Learn more: http://bit.ly/kaggle-creds
+Your Kaggle username: meenuuu
+Your Kaggle Key: ··········
+Downloading otto-group-product-classification-challenge.zip to ./otto-group-product-classification-challenge
+100%|██████████| 6.05M/6.05M [00:00<00:00, 76.8MB/s]
+data_dir = './otto-group-product-classification-challenge'
+View Dataset Files
+# Details of file size
+!ls -lh {data_dir}
+total 42M
+-rw-r--r-- 1 root root 3.4M Mar 13 11:42 sampleSubmission.csv
+-rw-r--r-- 1 root root  27M Mar 13 11:42 test.csv
+-rw-r--r-- 1 root root  12M Mar 13 11:42 train.csv
+# Training set
+!head {data_dir}/train.csv
+id,feat_1,feat_2,feat_3,feat_4,feat_5,feat_6,feat_7,feat_8,feat_9,feat_10,feat_11,feat_12,feat_13,feat_14,feat_15,feat_16,feat_17,feat_18,feat_19,feat_20,feat_21,feat_22,feat_23,feat_24,feat_25,feat_26,feat_27,feat_28,feat_29,feat_30,feat_31,feat_32,feat_33,feat_34,feat_35,feat_36,feat_37,feat_38,feat_39,feat_40,feat_41,feat_42,feat_43,feat_44,feat_45,feat_46,feat_47,feat_48,feat_49,feat_50,feat_51,feat_52,feat_53,feat_54,feat_55,feat_56,feat_57,feat_58,feat_59,feat_60,feat_61,feat_62,feat_63,feat_64,feat_65,feat_66,feat_67,feat_68,feat_69,feat_70,feat_71,feat_72,feat_73,feat_74,feat_75,feat_76,feat_77,feat_78,feat_79,feat_80,feat_81,feat_82,feat_83,feat_84,feat_85,feat_86,feat_87,feat_88,feat_89,feat_90,feat_91,feat_92,feat_93,target
+1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,2,0,0,0,0,1,0,4,1,1,0,0,2,0,0,0,0,0,1,0,0,0,0,1,0,5,0,0,0,0,0,2,0,0,0,0,0,1,0,0,2,0,0,11,0,1,1,0,1,0,7,0,0,0,1,0,0,0,0,0,0,0,2,1,0,0,0,0,1,0,0,0,0,0,0,0,0,Class_1
+2,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,2,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Class_1
+3,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,6,0,0,2,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,Class_1
+4,1,0,0,1,6,1,5,0,0,1,1,0,1,0,0,1,1,0,0,0,0,0,0,7,2,2,0,0,0,58,0,10,0,0,0,0,0,3,0,0,0,0,0,2,0,2,0,1,2,1,3,0,0,3,1,0,0,0,0,0,0,0,0,0,2,1,5,0,0,4,0,0,2,1,0,1,0,0,1,1,2,2,0,22,0,1,2,0,0,0,0,0,0,Class_1
+5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,3,0,0,0,0,0,0,0,4,0,1,0,0,0,1,0,0,0,0,1,0,0,0,Class_1
+6,2,1,0,0,7,0,0,0,0,0,0,0,2,0,0,0,6,0,0,2,0,0,0,5,0,0,0,0,1,0,0,2,0,0,0,2,0,0,0,1,0,0,0,0,0,0,2,2,0,0,0,0,0,3,0,0,0,0,0,5,0,1,0,1,4,2,6,0,2,4,2,0,0,1,0,2,0,4,3,0,0,0,0,1,0,3,0,0,0,0,2,0,0,Class_1
+7,2,0,0,0,0,0,0,2,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,2,2,0,0,0,0,0,0,1,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,2,0,0,0,0,2,0,1,0,3,1,0,1,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,Class_1
+8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,Class_1
+9,0,0,0,0,0,0,0,4,0,0,0,1,7,0,0,0,1,0,0,2,0,0,0,7,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,2,6,0,0,0,0,1,2,2,0,0,0,0,1,0,2,0,0,0,3,4,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,2,0,0,0,0,0,0,1,Class_1
+# Test set
+!head {data_dir}/test.csv
+id,feat_1,feat_2,feat_3,feat_4,feat_5,feat_6,feat_7,feat_8,feat_9,feat_10,feat_11,feat_12,feat_13,feat_14,feat_15,feat_16,feat_17,feat_18,feat_19,feat_20,feat_21,feat_22,feat_23,feat_24,feat_25,feat_26,feat_27,feat_28,feat_29,feat_30,feat_31,feat_32,feat_33,feat_34,feat_35,feat_36,feat_37,feat_38,feat_39,feat_40,feat_41,feat_42,feat_43,feat_44,feat_45,feat_46,feat_47,feat_48,feat_49,feat_50,feat_51,feat_52,feat_53,feat_54,feat_55,feat_56,feat_57,feat_58,feat_59,feat_60,feat_61,feat_62,feat_63,feat_64,feat_65,feat_66,feat_67,feat_68,feat_69,feat_70,feat_71,feat_72,feat_73,feat_74,feat_75,feat_76,feat_77,feat_78,feat_79,feat_80,feat_81,feat_82,feat_83,feat_84,feat_85,feat_86,feat_87,feat_88,feat_89,feat_90,feat_91,feat_92,feat_93
+1,0,0,0,0,0,0,0,0,0,3,0,0,0,3,2,1,0,0,0,0,0,0,0,5,3,1,1,0,0,0,0,0,1,0,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,11,1,20,0,0,0,0,0
+2,2,2,14,16,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,2,0,4,0,4,0,0,0,0,2,0,0,0,8,0,0,0,0,0,0,0,0,2,0,4,0,4,0,0,0,0,0,24,0,0,0,0,0,0,0,0,0,6,8,0,0,0,0,0,0,0,0,0,0,0,2,0,0,4,0,2,0,0,0,0,0,0,4,0,0,2,0
+3,0,1,12,1,0,0,0,0,0,0,7,1,0,0,0,7,0,2,0,0,0,4,0,0,0,1,1,2,0,0,0,0,0,0,1,0,0,2,0,0,0,1,0,1,0,4,0,2,3,0,0,0,0,10,1,0,2,0,0,1,6,1,1,0,0,1,1,1,2,0,0,2,0,0,0,0,0,0,0,6,0,2,0,0,0,0,0,2,0,0,0,0,1
+4,0,0,0,1,0,0,0,0,0,0,0,0,0,0,21,3,0,0,0,0,0,0,0,0,4,0,0,0,1,0,0,0,2,0,0,0,0,1,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,9,0,0,2,0,0,0,0,6,0,8,0,0,0,0,1,0,0,0,0,0,0,0,3,1,0,0,0,0,0,0,0
+5,1,0,0,1,0,0,1,2,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,3,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,0,0,4,0,5,16,0,0,0,0,0,0,1,0,0,0,0,0,0,0,9,0,0
+6,0,0,0,0,0,0,0,0,17,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,2,0,0,0,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,11,0,0,7,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0
+7,0,0,0,0,0,0,0,0,0,5,0,0,0,1,0,4,0,1,0,4,0,2,0,0,1,0,0,1,0,0,1,0,0,0,2,0,2,1,1,0,1,0,0,2,0,0,0,0,0,2,0,3,0,1,0,1,1,0,1,0,0,2,0,0,2,0,0,0,2,2,0,1,0,0,0,0,0,0,0,0,0,0,2,0,3,0,0,1,0,18,1,0,0
+8,2,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,1,0,0,0,0,0,1,6,0,0,0,0,0,0,0,1,0,0,0,0,0,0,3,0,0,0,0,1,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,2,0,0,0,0,0
+9,0,0,0,0,1,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,5,0,0,0,0,0
+# Sample Submission file
+!head {data_dir}/sampleSubmission.csv
+id,Class_1,Class_2,Class_3,Class_4,Class_5,Class_6,Class_7,Class_8,Class_9
+1,1,0,0,0,0,0,0,0,0
+2,1,0,0,0,0,0,0,0,0
+3,1,0,0,0,0,0,0,0,0
+4,1,0,0,0,0,0,0,0,0
+5,1,0,0,0,0,0,0,0,0
+6,1,0,0,0,0,0,0,0,0
+7,1,0,0,0,0,0,0,0,0
+8,1,0,0,0,0,0,0,0,0
+9,1,0,0,0,0,0,0,0,0
+# No. of lines in training set
+!wc -l {data_dir}/train.csv
+61879 ./otto-group-product-classification-challenge/train.csv
+# No. of lines in test set
+!wc -l {data_dir}/test.csv
+144369 ./otto-group-product-classification-challenge/test.csv
+# No. of lines in submission file
+!wc -l {data_dir}/sampleSubmission.csv
+144369 ./otto-group-product-classification-challenge/sampleSubmission.csv
+Observations:
+
+Otto Group Product Classification Challenge Dataset includes 95 columns and 61879 rows.
+There are 2 different data types as follows: int64, object.
+This is supervised learning - classification problem.
+The training data is 12Mb in size.
+The training data has 61879 rows of data.
+The test set has all columns as in training set except the target column.
+jovian.commit()
+[jovian] Detected Colab notebook...
+[jovian] Uploading colab notebook to Jovian...
+Committed successfully! https://jovian.ai/meenakshi-ravikumar/product-classification-challenge-otto-group
+'https://jovian.ai/meenakshi-ravikumar/product-classification-challenge-otto-group'
+Load Training set
+import pandas as pd
+import random
+# Loading the entire dataset would slow down the process, so a sample of 5% data is used.
+sample_frac = 0.05
+%%time
+def skip_row(row_idx):
+    if row_idx == 0:
+        return False
+    return random.random() > sample_frac
+
+random.seed(42)
+Otto_df = pd.read_csv(data_dir+"/train.csv")
+CPU times: user 662 ms, sys: 111 ms, total: 773 ms
+Wall time: 1.05 s
+Submission_df = pd.read_csv(data_dir+"/sampleSubmission.csv")
+Submission_df
+
+Otto_df
+
+Load Test Set
+test_df = pd.read_csv(data_dir+"/test.csv")
+#2.Explore the Dataset
+Basic info about training set
+Basic info about test set
+Exploratory data analysis & visualization
+Training Set
+Otto_df.info()
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 61878 entries, 0 to 61877
+Data columns (total 95 columns):
+ #   Column   Non-Null Count  Dtype 
+---  ------   --------------  ----- 
+ 0   id       61878 non-null  int64 
+ 1   feat_1   61878 non-null  int64 
+ 2   feat_2   61878 non-null  int64 
+ 3   feat_3   61878 non-null  int64 
+ 4   feat_4   61878 non-null  int64 
+ 5   feat_5   61878 non-null  int64 
+ 6   feat_6   61878 non-null  int64 
+ 7   feat_7   61878 non-null  int64 
+ 8   feat_8   61878 non-null  int64 
+ 9   feat_9   61878 non-null  int64 
+ 10  feat_10  61878 non-null  int64 
+ 11  feat_11  61878 non-null  int64 
+ 12  feat_12  61878 non-null  int64 
+ 13  feat_13  61878 non-null  int64 
+ 14  feat_14  61878 non-null  int64 
+ 15  feat_15  61878 non-null  int64 
+ 16  feat_16  61878 non-null  int64 
+ 17  feat_17  61878 non-null  int64 
+ 18  feat_18  61878 non-null  int64 
+ 19  feat_19  61878 non-null  int64 
+ 20  feat_20  61878 non-null  int64 
+ 21  feat_21  61878 non-null  int64 
+ 22  feat_22  61878 non-null  int64 
+ 23  feat_23  61878 non-null  int64 
+ 24  feat_24  61878 non-null  int64 
+ 25  feat_25  61878 non-null  int64 
+ 26  feat_26  61878 non-null  int64 
+ 27  feat_27  61878 non-null  int64 
+ 28  feat_28  61878 non-null  int64 
+ 29  feat_29  61878 non-null  int64 
+ 30  feat_30  61878 non-null  int64 
+ 31  feat_31  61878 non-null  int64 
+ 32  feat_32  61878 non-null  int64 
+ 33  feat_33  61878 non-null  int64 
+ 34  feat_34  61878 non-null  int64 
+ 35  feat_35  61878 non-null  int64 
+ 36  feat_36  61878 non-null  int64 
+ 37  feat_37  61878 non-null  int64 
+ 38  feat_38  61878 non-null  int64 
+ 39  feat_39  61878 non-null  int64 
+ 40  feat_40  61878 non-null  int64 
+ 41  feat_41  61878 non-null  int64 
+ 42  feat_42  61878 non-null  int64 
+ 43  feat_43  61878 non-null  int64 
+ 44  feat_44  61878 non-null  int64 
+ 45  feat_45  61878 non-null  int64 
+ 46  feat_46  61878 non-null  int64 
+ 47  feat_47  61878 non-null  int64 
+ 48  feat_48  61878 non-null  int64 
+ 49  feat_49  61878 non-null  int64 
+ 50  feat_50  61878 non-null  int64 
+ 51  feat_51  61878 non-null  int64 
+ 52  feat_52  61878 non-null  int64 
+ 53  feat_53  61878 non-null  int64 
+ 54  feat_54  61878 non-null  int64 
+ 55  feat_55  61878 non-null  int64 
+ 56  feat_56  61878 non-null  int64 
+ 57  feat_57  61878 non-null  int64 
+ 58  feat_58  61878 non-null  int64 
+ 59  feat_59  61878 non-null  int64 
+ 60  feat_60  61878 non-null  int64 
+ 61  feat_61  61878 non-null  int64 
+ 62  feat_62  61878 non-null  int64 
+ 63  feat_63  61878 non-null  int64 
+ 64  feat_64  61878 non-null  int64 
+ 65  feat_65  61878 non-null  int64 
+ 66  feat_66  61878 non-null  int64 
+ 67  feat_67  61878 non-null  int64 
+ 68  feat_68  61878 non-null  int64 
+ 69  feat_69  61878 non-null  int64 
+ 70  feat_70  61878 non-null  int64 
+ 71  feat_71  61878 non-null  int64 
+ 72  feat_72  61878 non-null  int64 
+ 73  feat_73  61878 non-null  int64 
+ 74  feat_74  61878 non-null  int64 
+ 75  feat_75  61878 non-null  int64 
+ 76  feat_76  61878 non-null  int64 
+ 77  feat_77  61878 non-null  int64 
+ 78  feat_78  61878 non-null  int64 
+ 79  feat_79  61878 non-null  int64 
+ 80  feat_80  61878 non-null  int64 
+ 81  feat_81  61878 non-null  int64 
+ 82  feat_82  61878 non-null  int64 
+ 83  feat_83  61878 non-null  int64 
+ 84  feat_84  61878 non-null  int64 
+ 85  feat_85  61878 non-null  int64 
+ 86  feat_86  61878 non-null  int64 
+ 87  feat_87  61878 non-null  int64 
+ 88  feat_88  61878 non-null  int64 
+ 89  feat_89  61878 non-null  int64 
+ 90  feat_90  61878 non-null  int64 
+ 91  feat_91  61878 non-null  int64 
+ 92  feat_92  61878 non-null  int64 
+ 93  feat_93  61878 non-null  int64 
+ 94  target   61878 non-null  object
+dtypes: int64(94), object(1)
+memory usage: 44.8+ MB
+Otto_df.describe()
+
+Test Set
+test_df.info()
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 144368 entries, 0 to 144367
+Data columns (total 94 columns):
+ #   Column   Non-Null Count   Dtype
+---  ------   --------------   -----
+ 0   id       144368 non-null  int64
+ 1   feat_1   144368 non-null  int64
+ 2   feat_2   144368 non-null  int64
+ 3   feat_3   144368 non-null  int64
+ 4   feat_4   144368 non-null  int64
+ 5   feat_5   144368 non-null  int64
+ 6   feat_6   144368 non-null  int64
+ 7   feat_7   144368 non-null  int64
+ 8   feat_8   144368 non-null  int64
+ 9   feat_9   144368 non-null  int64
+ 10  feat_10  144368 non-null  int64
+ 11  feat_11  144368 non-null  int64
+ 12  feat_12  144368 non-null  int64
+ 13  feat_13  144368 non-null  int64
+ 14  feat_14  144368 non-null  int64
+ 15  feat_15  144368 non-null  int64
+ 16  feat_16  144368 non-null  int64
+ 17  feat_17  144368 non-null  int64
+ 18  feat_18  144368 non-null  int64
+ 19  feat_19  144368 non-null  int64
+ 20  feat_20  144368 non-null  int64
+ 21  feat_21  144368 non-null  int64
+ 22  feat_22  144368 non-null  int64
+ 23  feat_23  144368 non-null  int64
+ 24  feat_24  144368 non-null  int64
+ 25  feat_25  144368 non-null  int64
+ 26  feat_26  144368 non-null  int64
+ 27  feat_27  144368 non-null  int64
+ 28  feat_28  144368 non-null  int64
+ 29  feat_29  144368 non-null  int64
+ 30  feat_30  144368 non-null  int64
+ 31  feat_31  144368 non-null  int64
+ 32  feat_32  144368 non-null  int64
+ 33  feat_33  144368 non-null  int64
+ 34  feat_34  144368 non-null  int64
+ 35  feat_35  144368 non-null  int64
+ 36  feat_36  144368 non-null  int64
+ 37  feat_37  144368 non-null  int64
+ 38  feat_38  144368 non-null  int64
+ 39  feat_39  144368 non-null  int64
+ 40  feat_40  144368 non-null  int64
+ 41  feat_41  144368 non-null  int64
+ 42  feat_42  144368 non-null  int64
+ 43  feat_43  144368 non-null  int64
+ 44  feat_44  144368 non-null  int64
+ 45  feat_45  144368 non-null  int64
+ 46  feat_46  144368 non-null  int64
+ 47  feat_47  144368 non-null  int64
+ 48  feat_48  144368 non-null  int64
+ 49  feat_49  144368 non-null  int64
+ 50  feat_50  144368 non-null  int64
+ 51  feat_51  144368 non-null  int64
+ 52  feat_52  144368 non-null  int64
+ 53  feat_53  144368 non-null  int64
+ 54  feat_54  144368 non-null  int64
+ 55  feat_55  144368 non-null  int64
+ 56  feat_56  144368 non-null  int64
+ 57  feat_57  144368 non-null  int64
+ 58  feat_58  144368 non-null  int64
+ 59  feat_59  144368 non-null  int64
+ 60  feat_60  144368 non-null  int64
+ 61  feat_61  144368 non-null  int64
+ 62  feat_62  144368 non-null  int64
+ 63  feat_63  144368 non-null  int64
+ 64  feat_64  144368 non-null  int64
+ 65  feat_65  144368 non-null  int64
+ 66  feat_66  144368 non-null  int64
+ 67  feat_67  144368 non-null  int64
+ 68  feat_68  144368 non-null  int64
+ 69  feat_69  144368 non-null  int64
+ 70  feat_70  144368 non-null  int64
+ 71  feat_71  144368 non-null  int64
+ 72  feat_72  144368 non-null  int64
+ 73  feat_73  144368 non-null  int64
+ 74  feat_74  144368 non-null  int64
+ 75  feat_75  144368 non-null  int64
+ 76  feat_76  144368 non-null  int64
+ 77  feat_77  144368 non-null  int64
+ 78  feat_78  144368 non-null  int64
+ 79  feat_79  144368 non-null  int64
+ 80  feat_80  144368 non-null  int64
+ 81  feat_81  144368 non-null  int64
+ 82  feat_82  144368 non-null  int64
+ 83  feat_83  144368 non-null  int64
+ 84  feat_84  144368 non-null  int64
+ 85  feat_85  144368 non-null  int64
+ 86  feat_86  144368 non-null  int64
+ 87  feat_87  144368 non-null  int64
+ 88  feat_88  144368 non-null  int64
+ 89  feat_89  144368 non-null  int64
+ 90  feat_90  144368 non-null  int64
+ 91  feat_91  144368 non-null  int64
+ 92  feat_92  144368 non-null  int64
+ 93  feat_93  144368 non-null  int64
+dtypes: int64(94)
+memory usage: 103.5 MB
+test_df.describe()
+
+jovian.commit()
+[jovian] Detected Colab notebook...
+[jovian] Uploading colab notebook to Jovian...
+Committed successfully! https://jovian.ai/meenakshi-ravikumar/product-classification-challenge-otto-group
+'https://jovian.ai/meenakshi-ravikumar/product-classification-challenge-otto-group'
+Exploratory Data Analysis and Visualization
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+pd.set_option('display.max_columns', 100)
+pd.set_option('display.max_rows', 50)
+sns.set_style('darkgrid')
+sns.countplot(x = Otto_df.target)
+<matplotlib.axes._subplots.AxesSubplot at 0x7fd0447f06d0>
+Notebook Image
+With the above visualization,we can state that we have class imbalance in the target column of the training set. Class_2 appears to have the lead, followed by Class_6
+
+!pip install wordcloud --upgrade --quiet
+from wordcloud import WordCloud, STOPWORDS
+data = Otto_df['target'].value_counts().to_dict() 
+wordcloud = WordCloud(
+    width = 2000,
+    height = 1500,
+    #min_word_length = 2,
+    background_color = 'white',
+    stopwords = STOPWORDS).generate(str(data))
+
+fig = plt.figure(
+    figsize = (30, 20),
+    facecolor = 'k',
+    edgecolor = 'k')
+plt.imshow(wordcloud, interpolation = 'bilinear')
+plt.axis('off')
+plt.tight_layout(pad=0)
+plt.show()
+Notebook Image
+
+import sys
+!cp ../input/rapids/rapids.0.11.0 /opt/conda/envs/rapids.tar.gz > /dev/null
+!cd /opt/conda/envs/ && tar -xzvf rapids.tar.gz > /dev/null
+sys.path = ["/opt/conda/envs/rapids/lib/python3.6/site-packages"] + sys.path
+sys.path = ["/opt/conda/envs/rapids/lib/python3.6"] + sys.path
+sys.path = ["/opt/conda/envs/rapids/lib"] + sys.path 
+!cp /opt/conda/envs/rapids/lib/libxgboost.so /opt/conda/lib/ > /dev/null
+%matplotlib inline
+plt.rcParams['figure.figsize'] = [10, 10]
+
+#import cuml.manifold    as tsne_rapids
+import sklearn.manifold as tsne_sklearn
+train = train_df.sample(15000)
+train.shape
+y = np.array( [int(v.split('_')[1]) for v in train.target.values ] )
+train.drop( ['id','target'], inplace=True, axis=1 )
+%%time
+tsne = tsne_sklearn.TSNE(n_components=2, random_state=2020 )
+train_2D_sklearn = tsne.fit_transform( train.values )
+/usr/local/lib/python3.7/dist-packages/sklearn/manifold/_t_sne.py:783: FutureWarning: The default initialization in TSNE will change from 'random' to 'pca' in 1.2.
+  FutureWarning,
+/usr/local/lib/python3.7/dist-packages/sklearn/manifold/_t_sne.py:793: FutureWarning: The default learning rate in TSNE will change from 200.0 to 'auto' in 1.2.
+  FutureWarning,
+CPU times: user 6min 33s, sys: 7.01 s, total: 6min 40s
+Wall time: 5min 5s
+plt.scatter(train_2D_sklearn[:,0], train_2D_sklearn[:,1], c = y, s = 0.5)
+<matplotlib.collections.PathCollection at 0x7fd044752ed0>
+Notebook Image
+#3. Prepare Dataset for Training
+Split Training & Validation Set
+Fill/Remove Missing Values
+Extract Inputs & Outputs
+Training
+Validation
+Test
+Split Training & Validation Set
+From the training set, we can use 20% of the data as the validation set to evaluate the model.
+
+from sklearn.model_selection import train_test_split
+train_df, val_df = train_test_split(Otto_df, test_size=0.2, random_state=42)
+len(train_df), len(val_df)
+(49502, 12376)
+Fill/Remove Missing Values
+train_df = train_df.dropna()
+val_df = val_df.dropna()
+Extract Inputs and Outputs
+Otto_df.columns
+Index(['id', 'feat_1', 'feat_2', 'feat_3', 'feat_4', 'feat_5', 'feat_6',
+       'feat_7', 'feat_8', 'feat_9', 'feat_10', 'feat_11', 'feat_12',
+       'feat_13', 'feat_14', 'feat_15', 'feat_16', 'feat_17', 'feat_18',
+       'feat_19', 'feat_20', 'feat_21', 'feat_22', 'feat_23', 'feat_24',
+       'feat_25', 'feat_26', 'feat_27', 'feat_28', 'feat_29', 'feat_30',
+       'feat_31', 'feat_32', 'feat_33', 'feat_34', 'feat_35', 'feat_36',
+       'feat_37', 'feat_38', 'feat_39', 'feat_40', 'feat_41', 'feat_42',
+       'feat_43', 'feat_44', 'feat_45', 'feat_46', 'feat_47', 'feat_48',
+       'feat_49', 'feat_50', 'feat_51', 'feat_52', 'feat_53', 'feat_54',
+       'feat_55', 'feat_56', 'feat_57', 'feat_58', 'feat_59', 'feat_60',
+       'feat_61', 'feat_62', 'feat_63', 'feat_64', 'feat_65', 'feat_66',
+       'feat_67', 'feat_68', 'feat_69', 'feat_70', 'feat_71', 'feat_72',
+       'feat_73', 'feat_74', 'feat_75', 'feat_76', 'feat_77', 'feat_78',
+       'feat_79', 'feat_80', 'feat_81', 'feat_82', 'feat_83', 'feat_84',
+       'feat_85', 'feat_86', 'feat_87', 'feat_88', 'feat_89', 'feat_90',
+       'feat_91', 'feat_92', 'feat_93', 'target'],
+      dtype='object')
+input_cols = ['feat_1', 'feat_2', 'feat_3', 'feat_4', 'feat_5', 'feat_6',
+       'feat_7', 'feat_8', 'feat_9', 'feat_10', 'feat_11', 'feat_12',
+       'feat_13', 'feat_14', 'feat_15', 'feat_16', 'feat_17', 'feat_18',
+       'feat_19', 'feat_20', 'feat_21', 'feat_22', 'feat_23', 'feat_24',
+       'feat_25', 'feat_26', 'feat_27', 'feat_28', 'feat_29', 'feat_30',
+       'feat_31', 'feat_32', 'feat_33', 'feat_34', 'feat_35', 'feat_36',
+       'feat_37', 'feat_38', 'feat_39', 'feat_40', 'feat_41', 'feat_42',
+       'feat_43', 'feat_44', 'feat_45', 'feat_46', 'feat_47', 'feat_48',
+       'feat_49', 'feat_50', 'feat_51', 'feat_52', 'feat_53', 'feat_54',
+       'feat_55', 'feat_56', 'feat_57', 'feat_58', 'feat_59', 'feat_60',
+       'feat_61', 'feat_62', 'feat_63', 'feat_64', 'feat_65', 'feat_66',
+       'feat_67', 'feat_68', 'feat_69', 'feat_70', 'feat_71', 'feat_72',
+       'feat_73', 'feat_74', 'feat_75', 'feat_76', 'feat_77', 'feat_78',
+       'feat_79', 'feat_80', 'feat_81', 'feat_82', 'feat_83', 'feat_84',
+       'feat_85', 'feat_86', 'feat_87', 'feat_88', 'feat_89', 'feat_90',
+       'feat_91', 'feat_92', 'feat_93']
+target_col = 'target'
+Training
+train_inputs = train_df[input_cols]
+train_targets = train_df[target_col]
+train_inputs
+
+train_targets
+15969    Class_2
+25018    Class_3
+242      Class_1
+5633     Class_2
+49199    Class_8
+          ...   
+54343    Class_8
+38158    Class_6
+860      Class_1
+15795    Class_2
+56422    Class_8
+Name: target, Length: 49502, dtype: object
+train10_df=train_df.head(10)
+train10_df.plot(kind='pie', y = 'id', 
+               autopct='%1.1f%%', 
+ startangle=90, shadow=False, labels=train10_df['target'], legend = False, fontsize=12, title = "Product Classification");
+Notebook Image
+Validation
+val_inputs = val_df[input_cols]
+val_targets = val_df[target_col]
+val_inputs
+Test
+test_inputs = test_df[input_cols]
+4. Train Hardcoded and Baseline models
+Hardcoded model: Predict product category
+Baseline model: Logistic Regression
+For evaluation, the dataset uses multi-class logarithmic loss : https://www.kaggle.com/c/otto-group-product-classification-challenge/overview/evaluation
+
+from sklearn.linear_model import LogisticRegression
+model = LogisticRegression(solver='liblinear')
+model.fit(train_inputs, train_targets)
+LogisticRegression(solver='liblinear')
+print(model.coef_.tolist())
+
+print(model.intercept_)
+[-1.52461456 -0.22302937 -1.53073339 -2.4309687  -1.7544509  -1.64432023
+ -1.82105516 -1.22381474 -1.55234571]
+train_preds = model.predict(train_inputs)
+train_preds
+array(['Class_4', 'Class_2', 'Class_8', ..., 'Class_8', 'Class_2',
+       'Class_8'], dtype=object)
+train_targets
+15969    Class_2
+25018    Class_3
+242      Class_1
+5633     Class_2
+49199    Class_8
+          ...   
+54343    Class_8
+38158    Class_6
+860      Class_1
+15795    Class_2
+56422    Class_8
+Name: target, Length: 49502, dtype: object
+train_probs = model.predict_proba(train_inputs)
+
+model.classes_
+array(['Class_1', 'Class_2', 'Class_3', 'Class_4', 'Class_5', 'Class_6',
+       'Class_7', 'Class_8', 'Class_9'], dtype=object)
+from sklearn.metrics import accuracy_score
+accuracy_score(train_targets, train_preds)
+0.7572421316310453
+The model achieves an accuracy of 75.7 on the training set.
+
+from sklearn.metrics import confusion_matrix
+confusion_matrix(train_targets, train_preds, normalize='true')
+array([[3.15686275e-01, 1.27450980e-01, 1.30718954e-03, 0.00000000e+00,
+        2.61437908e-03, 9.01960784e-02, 2.74509804e-02, 2.01307190e-01,
+        2.33986928e-01],
+       [3.86279357e-04, 8.99258344e-01, 8.29728059e-02, 2.39493201e-03,
+        3.16749073e-03, 2.39493201e-03, 5.17614339e-03, 3.16749073e-03,
+        1.08158220e-03],
+       [1.55207202e-04, 7.05571939e-01, 2.67577216e-01, 3.56976564e-03,
+        0.00000000e+00, 2.63852243e-03, 1.47446842e-02, 4.65621605e-03,
+        1.08645041e-03],
+       [4.64468184e-04, 6.60473758e-01, 9.05712959e-02, 1.71388760e-01,
+        6.50255458e-03, 5.43427775e-02, 1.39340455e-02, 1.85787274e-03,
+        4.64468184e-04],
+       [0.00000000e+00, 4.36982521e-02, 9.19963201e-04, 0.00000000e+00,
+        9.54001840e-01, 0.00000000e+00, 0.00000000e+00, 9.19963201e-04,
+        4.59981601e-04],
+       [3.28859657e-03, 1.67985068e-02, 1.59985779e-03, 7.99928895e-04,
+        1.77761977e-04, 9.30228424e-01, 1.10212426e-02, 2.09759133e-02,
+        1.51097680e-02],
+       [1.26803673e-02, 2.12505466e-01, 6.51508526e-02, 4.80979449e-03,
+        3.06077831e-03, 9.09488413e-02, 5.41320507e-01, 6.20900743e-02,
+        7.43331876e-03],
+       [1.20765832e-02, 2.07658321e-02, 4.86008837e-03, 0.00000000e+00,
+        2.94550810e-04, 2.91605302e-02, 7.95287187e-03, 9.11634757e-01,
+        1.32547865e-02],
+       [1.42493639e-02, 5.01272265e-02, 1.01781170e-03, 1.01781170e-03,
+        7.63358779e-04, 3.68956743e-02, 3.81679389e-03, 5.21628499e-02,
+        8.39949109e-01]])
+5. Making Predictons, Evaluate the model and Submitting to Kaggle
+def predict_and_plot(inputs, targets, name=''):
+    preds = model.predict(inputs)
+    
+    accuracy = accuracy_score(targets, preds)
+    print("Accuracy: {:.2f}%".format(accuracy * 100))
+    
+    cf = confusion_matrix(targets, preds, normalize='true')
+    plt.figure()
+    sns.heatmap(cf, annot=True)
+    plt.xlabel('Prediction')
+    plt.ylabel('Target')
+    plt.title('{} Confusion Matrix'.format(name));
+    
+    return preds
+train_preds = predict_and_plot(train_inputs, train_targets, 'Training')
+Accuracy: 75.72%
+Notebook Image
+val_preds = predict_and_plot(val_inputs, val_targets, 'Validation')
+Accuracy: 75.69%
+Notebook Image
+test_preds = model.predict(test_inputs)
+test_preds
+array(['Class_4', 'Class_6', 'Class_6', ..., 'Class_3', 'Class_2',
+       'Class_2'], dtype=object)
+# One hot encoding of test preds
+import numpy as np
+one_hot_encoded_data = pd.get_dummies(test_preds, columns = ['Class_1','Class_2','Class_3','Class_4','Class_5','Class_6','Class_7','Class_8','Class_9'])
+print(one_hot_encoded_data)
+        Class_1  Class_2  Class_3  Class_4  Class_5  Class_6  Class_7  \
+0             0        0        0        1        0        0        0   
+1             0        0        0        0        0        1        0   
+2             0        0        0        0        0        1        0   
+3             0        1        0        0        0        0        0   
+4             0        0        0        0        0        0        0   
+...         ...      ...      ...      ...      ...      ...      ...   
+144363        1        0        0        0        0        0        0   
+144364        0        0        1        0        0        0        0   
+144365        0        0        1        0        0        0        0   
+144366        0        1        0        0        0        0        0   
+144367        0        1        0        0        0        0
+
+SampSub_df=Submission_df['id']
+SampSub_df
+0              1
+1              2
+2              3
+3              4
+4              5
+           ...  
+144363    144364
+144364    144365
+144365    144366
+144366    144367
+144367    144368
+Name: id, Length: 144368, dtype: int64
+testpreds_df=one_hot_encoded_data
+testpreds_df
+
+Sub_df = pd.concat([SampSub_df, testpreds_df], axis=1)
+Sub_df
+
+## Save the predictions as a CSV file
+Sub_df.to_csv('Sub.csv', index=None)
+from IPython.display import FileLink
+FileLink('Sub.csv')
+
+subcsv.jpg
+
+The predicted baseline model got a poor score, 8.4, which is to be rectified with the different models in fuerther sections and with tuning hyperparameters to yield a better score.
+
+Submission link: https://www.kaggle.com/c/otto-group-product-classification-challenge/submissions
+
+#6.Train and Evaluate Different models
+We will train different models and submit predictions to kaggle.
+
+Classification
+Gradient Boost
+Classfication model
+Supervised machine learning techniques involve training a model to operate on a set of features and predict a label using a dataset that includes some already-known label values. You can think of this function like this, in which y represents the label we want to predict and X represents the vector of features the model uses to predict it.
+
+    y=f([x1,x2,x3,…])
+Classification is a form of supervised machine learning in which you train a model to use the features (the x values in our function) to predict a label (y) that calculates the probability of the observed case belonging to each of a number of possible classes and predicting an appropriate label.
+
+# Separate features and labels
+features = input_cols
+label = target_col
+X,Y = Otto_df[features].values,Otto_df[label].values
+for n in range(0,4):
+    print("Product",str(n+1),"\n Features:",list(X[n]),"\n Labels:", Y[n])
+# Compare feature distribution for each label value
+%matplotlib inline
+for col in features:
+    Otto_df.boxplot(column=col,by=label,figsize=(6,6))
+    plt.title(col)
+plt.show()
+from sklearn.metrics import classification_report
+print(classification_report(train_targets,train_preds))
+from sklearn.metrics import classification_report
+print(classification_report(val_targets,val_preds))
+#XG Boost
+from xgboost.sklearn import XGBClassifier
+from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import LabelEncoder
+from collections import Counter
+from sklearn import decomposition
+from sklearn.metrics import log_loss
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.model_selection import GridSearchCV  
+from matplotlib import pyplot as plt
+train_X = train_df.drop(["target","id"], axis=1)
+# Representing target with numerical values
+le = LabelEncoder()
+le.fit(train_df["target"])
+train_y = le.transform(train_df["target"])
+# Splitting train data (80%-train, 20%-val)
+sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=0)
+for train_index, test_index in sss.split(train_X.values, train_y):
+    X_train = train_X.values[train_index]
+    X_val = train_X.values[test_index]
+
+    y_train = train_y[train_index]
+    y_val = train_y[test_index]
+# Null values
+missing_val_count_by_column = (train_df.isnull().sum())
+print(missing_val_count_by_column.sum())
+!pip install imblearn --quiet
+import imblearn
+from imblearn.over_sampling import RandomOverSampler
+ros = RandomOverSampler()
+X_ros, y_ros = ros.fit_resample(X_train, y_train)
+
+unique, counts = np.unique(y_ros, return_counts=True)
+
+print(np.asarray((unique, counts)).T)
+pd.Series(y_ros).value_counts().plot.bar()
+scaler = StandardScaler()
+scaler.fit(X_train)
+X_train_scaled = scaler.transform(X_train)
+X_val_scaled = scaler.transform(X_val)
+test_X = test_df.drop(["id"], axis=1)
+scaler_all = StandardScaler()
+train_X_scaled = scaler_all.fit_transform(train_X)
+test_X_scaled = scaler.transform(test_X)
+pca = decomposition.PCA(n_components=20)
+pca.fit(X_train_scaled)
+
+X_train_pca = pca.transform(X_train_scaled)
+print(pca.explained_variance_ratio_)
+print(pca.explained_variance_)
+# Determining the number of components
+pca = decomposition.PCA()
+pca.fit(X_train_scaled)
+
+X_train_pca = pca.transform(X_train_scaled)
+#print(np.cumsum(pca.explained_variance_ratio_))
+plt.plot(np.cumsum(pca.explained_variance_ratio_))
+plt.xlabel('number of components')
+plt.ylabel('cumulative explained variance');
+
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+# XG BOOST
+xgb = XGBClassifier(use_label_encoder = False, eval_metric='mlogloss')
+xgb.fit(X_train_scaled, y_train)
+preds = xgb.predict_proba(X_val_scaled)
+score = log_loss(y_val, preds)
+print("test data log loss eval : {}".format(log_loss(y_val,preds)))
+
+## 7. Tuning Hyperparameters
+from sklearn.model_selection import GridSearchCV
+import xgboost
+# n_estimators
+scores = []
+n_estimators = [100,200,400,525,600]
+
+for nes in n_estimators:
+    xgb = XGBClassifier(learning_rate =0.1, n_estimators=nes, max_depth=7, min_child_weight=3, subsample=0.8, 
+                             colsample_bytree=0.8, nthread=4, seed=42,use_label_encoder = False,eval_metric='mlogloss')
+    
+    xgb.fit(X_train_scaled, y_train)
+    preds = xgb.predict_proba(X_val_scaled)
+    score = log_loss(y_val, preds)
+    scores.append(score)
+    print("test data log loss eval : {}".format(log_loss(y_val,preds)))
+
+
+xgb_model = xgboost.XGBClassifier(num_class=7,
+                                  learning_rate=0.1,
+                                  num_iterations=1000,
+                                  max_depth=10,
+                                  feature_fraction=0.7, 
+                                  scale_pos_weight=1.5,
+                                  boosting='gbdt',
+                                  metric='multiclass',
+                                  eval_metric='mlogloss')
+plt.plot(n_estimators,scores,'o-')
+plt.ylabel(log_loss)
+plt.xlabel("n_estimator")
+print("best n_estimator {}".format(n_estimators[np.argmin(scores)]))
+# max_depths
+scores_md = []
+max_depths = [1,3,6,8,9]
+
+for md in max_depths:
+    xgb = XGBClassifier(learning_rate =0.1, n_estimators=n_estimators[np.argmin(scores)], 
+                        max_depth=md, min_child_weight=3, subsample=0.8, 
+                        colsample_bytree=0.8, nthread=4, seed=42, use_label_encoder = False,eval_metric='mlogloss')
+    xgb.fit(X_train_scaled, y_train)
+    preds = xgb.predict_proba(X_val_scaled)
+    score = log_loss(y_val, preds)
+    scores_md.append(score)
+    print("test data log loss eval : {}".format(log_loss(y_val,preds)))
+plt.plot(max_depths,scores_md,'o-')
+plt.ylabel(log_loss)
+plt.xlabel("max_depth")
+print("best max_depth {}".format(max_depths[np.argmin(scores_md)]))
+
+# min_child_weights
+scores_mcw = []
+min_child_weights = [1,3,5]
+
+for mcw in min_child_weights:
+    xgb = XGBClassifier(learning_rate =0.1, n_estimators=n_estimators[np.argmin(scores)],
+                        max_depth=max_depths[np.argmin(scores_md)], 
+                        min_child_weight=mcw, subsample=0.8, 
+                        colsample_bytree=0.8, nthread=4, seed=42, use_label_encoder = False,eval_metric='mlogloss')
+    xgb.fit(X_train_scaled, y_train)
+    preds = xgb.predict_proba(X_val_scaled)
+    score = log_loss(y_val, preds)
+    scores_mcw.append(score)
+    print("test data log loss eval : {}".format(log_loss(y_val,preds)))
+
+plt.plot(min_child_weights,scores_mcw,"o-")
+plt.ylabel(log_loss)
+plt.xlabel("min_child_weight")
+print("best min_child_weight {}".format(min_child_weights[np.argmin(scores_mcw)]))
+# subsamples
+scores_ss = []
+subsamples = [0.5,0.6,0.7,0.8,0.9,1]
+
+for ss in subsamples:
+    xgb = XGBClassifier(learning_rate =0.1, n_estimators=n_estimators[np.argmin(scores)], 
+                        max_depth=max_depths[np.argmin(scores_md)],
+                        min_child_weight=min_child_weights[np.argmin(scores_mcw)], subsample=ss, 
+                        colsample_bytree=0.8, nthread=4, seed=42, use_label_encoder = False,eval_metric='mlogloss')
+    xgb.fit(X_train_scaled, y_train)
+    preds = xgb.predict_proba(X_val_scaled)
+    score = log_loss(y_val, preds)
+    scores_ss.append(score)
+    print("test data log loss eval : {}".format(log_loss(y_val,preds)))
+
+plt.plot(subsamples,scores_ss,"o-")
+plt.ylabel(log_loss)
+plt.xlabel("subsample")
+print("best subsample {}".format(subsamples[np.argmin(scores_ss)]))
+
+# bytrees
+scores_cb = []
+colsample_bytrees = [0.5,0.6,0.7,0.8,0.9,1]
+
+for cb in colsample_bytrees:
+    xgb = XGBClassifier(learning_rate =0.1, n_estimators=n_estimators[np.argmin(scores)], 
+                        max_depth=max_depths[np.argmin(scores_md)], 
+                        min_child_weight=min_child_weights[np.argmin(scores_mcw)], 
+                        subsample=subsamples[np.argmin(scores_ss)], 
+                        colsample_bytree=cb, nthread=4, seed=42, use_label_encoder = False,eval_metric='mlogloss')
+    xgb.fit(X_train_scaled, y_train)
+    preds = xgb.predict_proba(X_val_scaled)
+    score = log_loss(y_val, preds)
+    scores_cb.append(score)
+    print("test data log loss eval : {}".format(log_loss(y_val,preds)))
+
+plt.plot(colsample_bytrees,scores_cb,"o-")
+plt.ylabel(log_loss)
+plt.xlabel("colsample_bytree")
+print("best colsample_bytree {}".format(colsample_bytrees[np.argmin(scores_cb)]))
+
+scores_eta = []
+etas = [0.001,0.01,0.1,0.2,0.3,0.5,1]
+
+for eta in etas:
+    xgb = XGBClassifier(learning_rate =eta, n_estimators=n_estimators[np.argmin(scores)], 
+                        max_depth=max_depths[np.argmin(scores_md)], 
+                        min_child_weight=min_child_weights[np.argmin(scores_mcw)], 
+                        subsample=subsamples[np.argmin(scores_ss)], 
+                        colsample_bytree=colsample_bytrees[np.argmin(scores_cb)], 
+                        nthread=4, seed=42, use_label_encoder = False,eval_metric='mlogloss')
+    xgb.fit(X_train_scaled, y_train)
+    preds = xgb.predict_proba(X_val_scaled)
+    score = log_loss(y_val, preds)
+    scores_eta.append(score)
+    print("test data log loss eval : {}".format(log_loss(y_val,preds)))
+
+plt.plot(etas,scores_eta,"o-")
+plt.ylabel(log_loss)
+plt.xlabel("eta")
+print("best eta {}".format(etas[np.argmin(scores_eta)]))
+xgb = XGBClassifier(learning_rate =eta, n_estimators=n_estimators[np.argmin(scores)], 
+                        max_depth=max_depths[np.argmin(scores_md)], 
+                        min_child_weight=min_child_weights[np.argmin(scores_mcw)], 
+                        subsample=subsamples[np.argmin(scores_ss)], 
+                        colsample_bytree=colsample_bytrees[np.argmin(scores_cb)], 
+                        nthread=4, seed=42,use_label_encoder = False,eval_metric='mlogloss')
+
+calibrated_xgb = CalibratedClassifierCV(xgb, cv=5, method='isotonic')
+calibrated_xgb.fit(X_train_scaled, y_train)
+preds = calibrated_xgb.predict_proba(X_val_scaled)
+score = log_loss(y_val, preds)
+scores_eta.append(score)
+print("test data log loss eval : {}".format(log_loss(y_val,preds)))
+# Submission
+xgb = XGBClassifier(learning_rate =0.1, n_estimators=400, max_depth=9, min_child_weight=1, subsample=0.7, 
+                       colsample_bytree=0.8, nthread=4, seed=42,use_label_encoder = False,eval_metric='mlogloss')
+                        
+my_model = CalibratedClassifierCV(xgb, cv=5, method='isotonic')
+my_model.fit(train_X_scaled,train_y)
+test_preds = my_model.predict_proba(test_X_scaled)
+output = pd.DataFrame(test_preds,columns=["Class_"+str(i) for i in range(1,10)])
+output.insert(loc=0, column='id', value=test_df.id)
+output.to_csv('submission.csv', index=False)
+
+![kagglesubmission2.JPG](data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4RDaRXhpZgAATU0AKgAAAAgABAE7AAIAAAAFAAAISodpAAQAAAABAAAIUJydAAEAAAAKAAAQyOocAAcAAAgMAAAAPgAAAAAc6gAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE5lbW8AAAAFkAMAAgAAABQAABCekAQAAgAAABQAABCykpEAAgAAAAMzOAAAkpIAAgAAAAMzOAAA6hwABwAACAwAAAiSAAAAABzqAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAyMjowMjoyNyAyMjoxMToyOAAyMDIyOjAyOjI3IDIyOjExOjI4AAAATgBlAG0AbwAAAP/hCxdodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0n77u/JyBpZD0nVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkJz8+DQo8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIj48cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIi8+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iPjx4bXA6Q3JlYXRlRGF0ZT4yMDIyLTAyLTI3VDIyOjExOjI4LjM3NzwveG1wOkNyZWF0ZURhdGU+PC9yZGY6RGVzY3JpcHRpb24+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iPjxkYzpjcmVhdG9yPjxyZGY6U2VxIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpsaT5OZW1vPC9yZGY6bGk+PC9yZGY6U2VxPg0KCQkJPC9kYzpjcmVhdG9yPjwvcmRmOkRlc2NyaXB0aW9uPjwvcmRmOlJERj48L3g6eG1wbWV0YT4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgPD94cGFja2V0IGVuZD0ndyc/Pv/bAEMABwUFBgUEBwYFBggHBwgKEQsKCQkKFQ8QDBEYFRoZGBUYFxseJyEbHSUdFxgiLiIlKCkrLCsaIC8zLyoyJyorKv/bAEMBBwgICgkKFAsLFCocGBwqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKv/AABEIANUDxwMBIgACEQEDEQH/xAAfAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgv/xAC1EAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8/T19vf4+fr/xAAfAQADAQEBAQEBAQEBAAAAAAAAAQIDBAUGBwgJCgv/xAC1EQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8/T19vf4+fr/2gAMAwEAAhEDEQA/APpGiiojKzsVgA4OC7dB/jQBLRUXlSHrO4/3VX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/Cjyn/5+JPyX/CgCWiovKf8A5+JPyX/Cjyn/AOfiT8l/woAloqLyn/5+JPyX/CjypB0nc/7yr/hQBLRUQlZGCzgcnAdeh/wqWgAooooAjnYiMKhwzkKD6e/5U9VCKFUYAGAKjm/1sH/XQ/8AoLVLQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAIyh1KsMgjBFMgYmMq5yyEqT6+/wCVSVFD/rZ/+ug/9BWgCWiiigCKX/Wwf9dD/wCgtUtRS/62D/rof/QWqWgAoJAGScCioL6yt9SsJ7K9jEtvcRtHKjdGUjBFAE+ecd6asiOCUdWCnBIOcGvPrLQNak8E6/LLJcz65OktjBJKvlSNBCzJGFPYuAW3dzJnpimWujw3l5qH/CKaHNpFjLok1rPFLZNZrNcNjyhtYDcVG8FwCPm6mk9Nu36N/wDA9R21s/61t/Xl+HouR6igMG+6Qfoa8/smudX1DT5IdN1CBdO0O4trj7VaPDiZxEAi7gN5/dtyuR055qD4c6Bf6PqsD6jp9vY7tFgVDZWTQrKc/OJyScyqQOuOGb3xdtbf11/y/Em+if8AXT/M9H3DdjIz6Zo3qGwWGfTNeX+MvDuo6h4q1W8h02Ca28uxVrg2LS3MaiR972zAj51GCQMnp9DYjsjH8WdTuLuwUxzXdu0E0vh6a5ZgIIxlLpfkiAYdwcEGpWo+56P5iCQRl13kZC55x9KXeu7G4Z9M157aabZR69cprPh28vNbbVjPDqEdq+PK35jYXIG1VVMKU3AnBG055j0azMHxN1SW7sUXzdQZ4pZPD00jsvkqAy3gOxBkHgjsR3ojrb+u3+f4fcS0v/Xf/I9GyPUUb1zjcM+ma8q0rQtb019FVLS5lsLnXZbqeN1bdZuJJvnwekbqVPoDz/FXT2vhqwh+KN3fpotvGn9nQvHci0UDz/NlLENj7+CuT1wRQtf68rg+v9dbHWvIka7pHVF6ZY4FOzzjvXF/EGwhu5NNmuLaefyPN2A6U2o2+SAMSQp8+T/Cwxj5skZwatrLcaLdeH9Uv9Fvbe3GjNayW9nBLdNbSFo2VCFDPjCkAngYwTQv6+5/5fiD0X9dzvS6jGWHPTmlyM4zz6V43qmgXaWPhyHUdNfC6NdxSeZosmpCGR3iKqVj4R8Z+YnAwRWpqNlrNre+GtctdKvWutH0XdJaKTIz5MayQFujPt3EDqSoprz/AK3/AMvx+8fl/W3+f4Hp+4eo64pPMTzPL3rvxnbnnHrivL9K0HVrS0vVvbW4kup/ElleTMI2YMSsLSMpx9xW3DPQBfarcOnCD4jia20me4ll1F5JpbrTXR4FKEeYl4p2NHjAETZPOOMYoS1V/wCtF/n+H3D8v63/AMvxPRRIhkKB1LqMlc8j8KGkRIy7uqoOrE4ArzjQ9OFn4/VrXSbiQvdXUk9zd6a8M1vu3HP2oHy542OAqckAqc/LgNg0x4dC8Ktr+j3N7pdrHOt1Z/Y3naOViPLkaEAswA3j7pwWB9wuiDq0el5HHPXp70Zz0ry5/DWoXumeHba2gvNNij1q5ubTbGd1jF5Uxh3L/Cu7b8h4wwXjpXT+Ak1IWGrSa1YtZXc2qTO0ZztPCjchPVSQcH0p21+V/wAv8/wE3b+vX/L8TqqKKKQwooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKii/wBbP/10H/oK1LUUX+tn/wCug/8AQVoAlooooAil/wBbB/10P/oLVLUUv+tg/wCuh/8AQWqWgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKii/1s/8A10H/AKCtS1FF/rZ/+ug/9BWgCWiiigCKX/Wwf9dD/wCgtUtRS/62D/rof/QWqWgAooooAKKqarqlpo2mTX+oSeXBCu5j3PoAO5NeUfbfFfxQvZU0520zRkbax3EKR6MRy7Y7dB7VnKdnyxV2YVq0aVlu3skep3OvaPZymK71WxgkBwUluUU/kTVq2u7e8i820ninj/vxOGH5ivPLb4KaMsIF5qV/LL3aIpGp/Aq386oah8J9R0ZzfeD9XmE8YyIpG2Ow9A4wD9CAKnnmtWvuMfa4laun+Op6vRXAeBfH82p3jaH4lT7PqsZKqzLs80jqCOzfoa7+tU1JXR0UqsaseaP/AAwUUVXv76DTNOuL68fy7e2iaWVz/CqjJP5ChuyuzZK7sixRXDab8SJbi70ttW8O3ml6brMgj06+lmjcSMwygdFOY9w6damj+IccnhfxPrP9msF8P3c9s0Xnf6/ygDuBx8uc9Oab0Tb6f1+olrt/X9WOzorzpvGniWX4pabpVrpAfS7rTVuSv2mMHazLumyRn5dxXZ3xmk/4WvOdMvNUj8LXs2mabdy29/dRzp+5CNt3Kpwz8YJwMAHqecO3fz/B2D+vvVz0aiud0/xfBqXjObQbe33JHp0d+l0JOJFc4A2449c5ri9e+Jeuz+HvDuq+HNJ2JqGsfY5Va4Q79sjJ5XzLxv2k7v4cUWd0v63t+YLVNr+tL/kerUVlarq02meD7zVri38me2sXuHg3h9jKhbbkcHkYzXBaVp2uW3wWs7rRtVSwubm0k1TULwxeZNK7qZMKTwCc43HOABipk+VNvp/X6MaV7ef9fqj1KivIde1G6/4Ul4Z8YTztLqulm1vPPb70m4hJFJ9GVjkV6zPcxW1nJdXDiOGKMyOx/hUDJP5VUlypt9Hb8iVra3UloritE8f3us3FjP8A8InqUGjak+201HcsmQfutJGuWjU4+8cjp60mnfEK51fV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EDSYYCaaVg2TnGIwWHHA61V8ba54i1+28bLba1aadpOi2SwS6dJbrI135kJYsXJDIfmwuMgkDjrkd0m+w1rbzPaaK8O8QeOvGFtra6Z4Wi1Mx6VYWriCx0YXiXTvGGxK5YNGvG0FQT970FdRDqvijxB8RbizttXbSdLs7C0vZ7F7JHkcuCWi3MMrnGCeowMY5py938f1f6Ep6fJfjb/M9JorwvwDqviLw/4e8G3Q1q2u9H1O9bT/AOyUtVDRZaQ7/NzuLAjkcAZ/GtWy8YeLDZ6d4vn1qzk0vUtVWxGg/ZVDQo0pjGJQdxkGNxB4+92AFPl963nb8v8AMG7f16/5M9foryW98WeIbbx5ptzYeITqWg3us/2a9sNMihhib5lZBIX812XGdwXYT3/hqtL4u8XWWheLfEkmtQy2mmahPp9nYPaIqqfNREkeQDOEDdMc45NTur/10/zRVtbf11/yZ7HRXl/hS31i0+MTweINcg1u6Hh5WF1FbrAdpnJClVJHHYjGRjipPE2peK73x9q2j6B4ot9EtrHSo74edZxzFmy4PLdF4GSc44wOtD0Sv5/hf/IS1b+X42/zPTKK8qt/FXijxnJ4e03RtWg8OXF5o41S5uzaLOZW3bPLjRzgLnLHv938ad74s8d6x4J0rVNFeWNI5LiHUbrRrCO9kkaOTy0aOKR1yjcklckY9Kb0/r5fmC1/rur/AJHsNFeS3WvXeualoDaPrNvJLdaDesuqLpyLIJU2gsFbLJyDlQwGfwrL8IXuq2cXw3OoXian9uS/nDS2kZljUQhgiyEFs5zlgQWzg5FFt79P+D/kC1dv62T/AFPbqK8i0bxb4s8nw94ov9bsrvTfEGoLZjRY7VVNqHZlBSUHczLt+YHj73oKr2Hijxr59jrVxr0E2mSeJG0htONkilozKyBzIBnI7AY6AknnIottL+r6f5oHor/11/yZ7LRRRSAq3S+Q32uPgr/rQP4k/wAR1/OrVNdQ0bK33SCD9KisWLadbM33jEpP5CgCeiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKA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H2q3/wCe8f8A32KlooAi+1W//PeP/vsUfarf/nvH/wB9ipaKAIvtVv8A894/++xR9qt/+e8f/fYqWigCL7Vb/wDPeP8A77FH2q3/AOe8f/fYqWigCL7Vb/8APeP/AL7FH2q3/wCe8f8A32KlooAi+1W//PeP/vsUfarf/nvH/wB9ipaKAIvtVv8A894/++xR9qt/+e8f/fYqWigCL7Vb/wDPeP8A77FH2q3/AOe8f/fYqWigCL7Vb/8APeP/AL7FH2q3/wCe8f8A32KlooAi+1W//PeP/vsUfarf/nvH/wB9ipaKAIvtVv8A894/++xR9qt/+e8f/fYqWigCL7Vb/wDPeP8A77FH2q3/AOe8f/fYqWigCL7Vb/8APeP/AL7FH2q3/wCe8f8A32KlooAi+1W//PeP/vsUfarf/nvH/wB9ipaKAIvtVv8A894/++xR9qt/+e8f/fYqWigCL7Vb/wDPeP8A77FH2q3/AOe8f/fYqWigCL7Vb/8APeP/AL7FH2q3/wCe8f8A32KlooAi+1W//PeP/vsUfarf/nvH/wB9ipaKAIvtVv8A894/++xR9qt/+e8f/fYqWigCL7Vb/wDPeP8A77FH2q3/AOe8f/fYqWigCL7Vb/8APeP/AL7FH2q3/wCe8f8A32KlooAi+1W//PeP/vsUfarf/nvH/wB9ipaKAIvtVv8A894/++xR9qt/+e8f/fYqWigCL7Vb/wDPeP8A77FH2q3/AOe8f/fYqWigCL7Vb/8APeP/AL7FH2q3/wCe8f8A32KlooAi+1W//PeP/vsUfarf/nvH/wB9ipaKAIvtVv8A894/++xR9qt/+e8f/fYqWigCL7Vb/wDPeP8A77FH2q3/AOe8f/fYqWigCL7Vb/8APeP/AL7FH2q3/wCe8f8A32KlooAi+1W//PeP/vsUfarf/nvH/wB9ipaKAIvtVv8A894/++xR9qt/+e8f/fYqWigCL7Vb/wDPeP8A77FH2q3/AOe8f/fYqWigCL7Vb/8APeP/AL7FH2q3/wCe8f8A32KlooAi+1W//PeP/vsUfarf/nvH/wB9ipaKAIvtVv8A894/++xR9qt/+e8f/fYqWigCL7Vb/wDPeP8A77FH2q3/AOe8f/fYqWigCL7Vb/8APeP/AL7FH2qDtKh9lOalooAhO+44AKR9yeC3t7VMBgYHAoooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/9k=)
+
+
+
+
